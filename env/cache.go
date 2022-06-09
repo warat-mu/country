@@ -11,7 +11,7 @@ import (
 )
 
 var Cache = redis.NewClient(&redis.Options{
-	Addr:     "host.docker.internal:6379",
+	Addr:     "localhost:6379",
 	Password: "",
 	DB:       0,
 })

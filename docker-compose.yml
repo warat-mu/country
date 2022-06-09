@@ -9,6 +9,7 @@ services:
       - 8080:8080
     depends_on:
       - mysql
+      - redis
     volumes:
       - .:/app/
   mysql:
@@ -29,7 +30,7 @@ services:
       timeout: 5s
       retries: 10
   redis:
-    image: "redis:alpine"
+    image: "redis:6.0.16"
     hostname: redis
     ports:
       - "6379:6379"

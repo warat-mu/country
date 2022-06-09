@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -34,6 +35,7 @@ func main() {
 	router.GET("/desc", getCountrydataDesc)
 	router.GET("/asc", getCountrydataAsc)
 	router.GET("/:region", getCountryRegiondata)
+	// router.GET("/new/:region", getCountryRegiondata)
 	router.Run()
 
 	// fmt.Println(models.GetCountry())
@@ -51,11 +53,12 @@ func mysqlcon() *sql.DB {
 
 func setCache(c *gin.Context, cl []models.Data) {
 	path := c.Request.URL.Path
-	byte, err := json.Marshal(cl)
+	data, err := json.Marshal(cl)
 	if err != nil {
 		log.Println(err)
 	}
-	cacheErr := env.Cache.Set(ctx, path, byte, 5*time.Second)
+	log.Println(reflect.TypeOf(data))
+	cacheErr := env.Cache.Set(ctx, path, data, 100*time.Second)
 	if cacheErr != nil {
 		log.Println(cacheErr.Err())
 	}
@@ -63,6 +66,7 @@ func setCache(c *gin.Context, cl []models.Data) {
 
 func getCountrydata(c *gin.Context) {
 	countrylist := models.GetCountry(*models.Db)
+	// log.Println(countrylist)
 	// log.Println(countrylist)
 
 	if countrylist == nil || len(countrylist) == 0 {
