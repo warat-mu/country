@@ -1,17 +1,24 @@
 package main
 
 import (
+	"context"
 	"country/addDB"
+	"country/env"
 	"country/models"
 	"database/sql"
+	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
+var ctx context.Context
+
 func main() {
 
+	ctx := context.Background()
 	models.Db = testsql()
 
 	addDB.DBcheck(models.Db)
@@ -21,6 +28,7 @@ func main() {
 	// log.Print("start")
 	router := gin.Default()
 	router.Use(cors.Default())
+	router.Use(env.VerifyCache(ctx))
 	router.GET("/", getCountrydata)
 	router.GET("/desc", getCountrydataDesc)
 	router.GET("/asc", getCountrydataAsc)
@@ -39,6 +47,19 @@ func mysqlcon() *sql.DB {
 
 	return db
 }
+
+func setCache(c *gin.Context, cl []models.Data) {
+	path := c.Request.URL.Path
+	byte, err := json.Marshal(cl)
+	if err != nil {
+		panic(err)
+	}
+	cacheErr := env.Cache.Set(ctx, path, byte, 5*time.Second)
+	if cacheErr != nil {
+		panic(cacheErr.Err())
+	}
+}
+
 func getCountrydata(c *gin.Context) {
 	countrylist := models.GetCountry(*models.Db)
 	// log.Println(countrylist)
@@ -46,6 +67,7 @@ func getCountrydata(c *gin.Context) {
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
+		setCache(c, countrylist)
 		c.IndentedJSON(http.StatusOK, countrylist)
 	}
 }
@@ -57,6 +79,7 @@ func getCountrydataDesc(c *gin.Context) {
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
+		setCache(c, countrylist)
 		c.IndentedJSON(http.StatusOK, countrylist)
 	}
 }
@@ -68,6 +91,7 @@ func getCountrydataAsc(c *gin.Context) {
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
+		setCache(c, countrylist)
 		c.IndentedJSON(http.StatusOK, countrylist)
 	}
 }
@@ -80,6 +104,7 @@ func getCountryRegiondata(c *gin.Context) {
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
+		setCache(c, countrylist)
 		c.IndentedJSON(http.StatusOK, countrylist)
 	}
 }
