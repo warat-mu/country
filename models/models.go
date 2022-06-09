@@ -85,13 +85,3 @@ func GetCountryByReion(region string, db *sql.DB) []Data {
 	}
 	return DataList
 }
-
-// func Test() {
-// 	db, err := sql.Open("mysql", "tester:secret@tcp(host.docker.internal:3306)/api")
-// 	if err != nil {
-// 		log.Println("connect fail")
-// 	} else {
-// 		log.Println("connect success")
-// 	}
-// 	defer db.Close()
-// }

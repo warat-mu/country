@@ -1,6 +1,8 @@
 FROM golang:1.18.3-stretch
 
-RUN apt update && apt upgrade -y
+RUN apt update && apt upgrade -y &&\
+    apt install -y git \
+    make openssh-client
 
 WORKDIR /app
 

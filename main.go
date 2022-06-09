@@ -6,11 +6,8 @@ import (
 	"country/env"
 	"country/models"
 	"database/sql"
-	"encoding/json"
 	"log"
 	"net/http"
-	"reflect"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -24,7 +21,6 @@ var Db *sql.DB
 func main() {
 
 	Db = Connectmysql()
-	log.Println(Db)
 	ctx := context.Background()
 	Cache = env.Redisinit()
 	addDB.DBcheck(Db)
@@ -36,9 +32,6 @@ func main() {
 	}
 	log.Println("OK======================")
 	log.Println(pong)
-	// addDB.NewCountry()
-	// models.Test()
-	// log.Print("start")
 	router := gin.Default()
 	router.Use(cors.Default())
 	router.Use(env.VerifyCache(ctx, Cache))
@@ -46,7 +39,6 @@ func main() {
 	router.GET("/desc", getCountrydataDesc)
 	router.GET("/asc", getCountrydataAsc)
 	router.GET("/:region", getCountryRegiondata)
-	// router.GET("/new/:region", getCountryRegiondata)
 	router.Run()
 
 	// fmt.Println(models.GetCountry())
@@ -63,22 +55,20 @@ func mysqlcon() *sql.DB {
 }
 
 func setCache(c *gin.Context, cl []models.Data) {
-	path := c.Request.URL.Path
-	data, err := json.Marshal(cl)
-	if err != nil {
-		log.Println(err)
-	}
-	log.Println(reflect.TypeOf(data))
-	Cache = env.Redisinit()
-	cacheErr := Cache.Set(ctx, path, data, 100*time.Second)
-	if cacheErr != nil {
-		panic(cacheErr)
-	}
+	// path := c.Request.URL.Path
+	// data, err := json.Marshal(cl)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(data)
+	// Cache = env.Redisinit()
+	// cacheErr := Cache.Set(ctx, path, data, 100*time.Second)
+	// if cacheErr != nil {
+	// 	panic(cacheErr)
+	// }
 }
 
 func getCountrydata(c *gin.Context) {
-	log.Println(*Db)
-	log.Println(Db)
 	countrylist := models.GetCountry(Db)
 	// log.Println(countrylist)
 
@@ -131,12 +121,3 @@ func Connectmysql() *sql.DB {
 	}
 	return db
 }
-
-// func connectioncheck() {
-// 	err := Db.Ping()
-// 	if err != nil {
-// 		Db.Close()
-// 		Db = connectmysql()
-// 	}
-// 	log.Println(err)
-// }
