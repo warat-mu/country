@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -28,7 +29,7 @@ func GetCountry(db sql.DB) []Data {
 		var country Data
 		err := result.Scan(&country.Name, &country.Region, &country.Population, &country.Flag_png, &country.Currencies_Name)
 		if err != nil {
-			panic(err.Error())
+			log.Println(err.Error())
 		}
 		DataList = append(DataList, country)
 	}

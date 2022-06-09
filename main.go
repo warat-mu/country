@@ -7,6 +7,7 @@ import (
 	"country/models"
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -52,11 +53,11 @@ func setCache(c *gin.Context, cl []models.Data) {
 	path := c.Request.URL.Path
 	byte, err := json.Marshal(cl)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	cacheErr := env.Cache.Set(ctx, path, byte, 5*time.Second)
 	if cacheErr != nil {
-		panic(cacheErr.Err())
+		log.Println(cacheErr.Err())
 	}
 }
 

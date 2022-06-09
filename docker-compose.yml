@@ -28,3 +28,8 @@ services:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-ppass"]
       timeout: 5s
       retries: 10
+  redis:
+    image: "redis:alpine"
+    hostname: redis
+    ports:
+      - "6379:6379"
