@@ -1,0 +1,30 @@
+version: "3.8"
+services:
+  web:
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    container_name: country_api
+    ports:
+      - 8080:8080
+    depends_on:
+      - mysql
+    volumes:
+      - .:/app/
+  mysql:
+    container_name: country_mysql
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "secret"
+      MYSQL_DATABASE: "api"
+      MYSQL_USER: "tester"
+      MYSQL_PASSWORD: "secret"
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uroot", "-ppass"]
+      timeout: 5s
+      retries: 10
