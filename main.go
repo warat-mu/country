@@ -14,23 +14,32 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
 var ctx context.Context
+var Cache *redis.Client
 
 func main() {
 
 	ctx := context.Background()
 	models.Db = testsql()
-
+	Cache = env.Redisinit()
 	addDB.DBcheck(models.Db)
+	pong, err := Cache.Ping(ctx).Result()
+	if err != nil {
+		log.Println("ERROR")
+		log.Println(err)
 
+	}
+	log.Println("OK======================")
+	log.Println(pong)
 	// addDB.NewCountry()
 	// models.Test()
 	// log.Print("start")
 	router := gin.Default()
 	router.Use(cors.Default())
-	router.Use(env.VerifyCache(ctx))
+	router.Use(env.VerifyCache(ctx, Cache))
 	router.GET("/", getCountrydata)
 	router.GET("/desc", getCountrydataDesc)
 	router.GET("/asc", getCountrydataAsc)
@@ -58,9 +67,9 @@ func setCache(c *gin.Context, cl []models.Data) {
 		log.Println(err)
 	}
 	log.Println(reflect.TypeOf(data))
-	cacheErr := env.Cache.Set(ctx, path, data, 100*time.Second)
+	cacheErr := Cache.Set(ctx, path, data, 100*time.Second)
 	if cacheErr != nil {
-		log.Println(cacheErr.Err())
+		panic(cacheErr)
 	}
 }
 
@@ -84,7 +93,7 @@ func getCountrydataDesc(c *gin.Context) {
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
-		setCache(c, countrylist)
+		// setCache(c, countrylist)
 		c.IndentedJSON(http.StatusOK, countrylist)
 	}
 }
@@ -96,7 +105,7 @@ func getCountrydataAsc(c *gin.Context) {
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
-		setCache(c, countrylist)
+		// setCache(c, countrylist)
 		c.IndentedJSON(http.StatusOK, countrylist)
 	}
 }
@@ -109,7 +118,7 @@ func getCountryRegiondata(c *gin.Context) {
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
-		setCache(c, countrylist)
+		// setCache(c, countrylist)
 		c.IndentedJSON(http.StatusOK, countrylist)
 	}
 }

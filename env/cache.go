@@ -10,16 +10,18 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-var Cache = redis.NewClient(&redis.Options{
-	Addr:     "localhost:6379",
-	Password: "",
-	DB:       0,
-})
+func Redisinit() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     "host.docker.internal:6379",
+		Password: "",
+		DB:       0,
+	})
+}
 
-func VerifyCache(ctx context.Context) gin.HandlerFunc {
+func VerifyCache(ctx context.Context, cache *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
-		data, err := Cache.Get(ctx, path).Bytes()
+		data, err := cache.Get(ctx, path).Bytes()
 		if err != nil {
 			c.Next()
 		} else {
