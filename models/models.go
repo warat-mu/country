@@ -18,9 +18,7 @@ type Data struct {
 	// Currencies_Symbol string
 }
 
-var Db *sql.DB
-
-func GetCountry(db sql.DB) []Data {
+func GetCountry(db *sql.DB) []Data {
 	result, _ := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata;")
 	defer result.Close()
 
@@ -36,7 +34,7 @@ func GetCountry(db sql.DB) []Data {
 	return DataList
 }
 
-func GetCountryDESC(db sql.DB) []Data {
+func GetCountryDESC(db *sql.DB) []Data {
 	result, _ := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata ORDER BY Population DESC;")
 	defer result.Close()
 
@@ -53,7 +51,7 @@ func GetCountryDESC(db sql.DB) []Data {
 	return DataList
 }
 
-func GetCountryASC(db sql.DB) []Data {
+func GetCountryASC(db *sql.DB) []Data {
 
 	result, _ := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata ORDER BY Population ASC;")
 	defer result.Close()
@@ -71,7 +69,7 @@ func GetCountryASC(db sql.DB) []Data {
 	return DataList
 }
 
-func GetCountryByReion(region string, db sql.DB) []Data {
+func GetCountryByReion(region string, db *sql.DB) []Data {
 
 	result, _ := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata WHERE Region = ?;", region)
 	defer result.Close()

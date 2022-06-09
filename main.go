@@ -19,13 +19,15 @@ import (
 
 var ctx context.Context
 var Cache *redis.Client
+var Db *sql.DB
 
 func main() {
 
+	Db = Connectmysql()
+	log.Println(Db)
 	ctx := context.Background()
-	models.Db = testsql()
 	Cache = env.Redisinit()
-	addDB.DBcheck(models.Db)
+	addDB.DBcheck(Db)
 	pong, err := Cache.Ping(ctx).Result()
 	if err != nil {
 		log.Println("ERROR")
@@ -67,6 +69,7 @@ func setCache(c *gin.Context, cl []models.Data) {
 		log.Println(err)
 	}
 	log.Println(reflect.TypeOf(data))
+	Cache = env.Redisinit()
 	cacheErr := Cache.Set(ctx, path, data, 100*time.Second)
 	if cacheErr != nil {
 		panic(cacheErr)
@@ -74,21 +77,21 @@ func setCache(c *gin.Context, cl []models.Data) {
 }
 
 func getCountrydata(c *gin.Context) {
-	countrylist := models.GetCountry(*models.Db)
-	// log.Println(countrylist)
+	log.Println(*Db)
+	log.Println(Db)
+	countrylist := models.GetCountry(Db)
 	// log.Println(countrylist)
 
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
 	} else {
-		setCache(c, countrylist)
+		// setCache(c, countrylist)
 		c.IndentedJSON(http.StatusOK, countrylist)
 	}
 }
 
 func getCountrydataDesc(c *gin.Context) {
-
-	countrylist := models.GetCountryDESC(*models.Db)
+	countrylist := models.GetCountryDESC(Db)
 
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -99,8 +102,7 @@ func getCountrydataDesc(c *gin.Context) {
 }
 
 func getCountrydataAsc(c *gin.Context) {
-
-	countrylist := models.GetCountryASC(*models.Db)
+	countrylist := models.GetCountryASC(Db)
 
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -111,9 +113,8 @@ func getCountrydataAsc(c *gin.Context) {
 }
 
 func getCountryRegiondata(c *gin.Context) {
-
 	region := c.Param("region")
-	countrylist := models.GetCountryByReion(region, *models.Db)
+	countrylist := models.GetCountryByReion(region, Db)
 
 	if countrylist == nil || len(countrylist) == 0 {
 		c.AbortWithStatus(http.StatusNotFound)
@@ -123,7 +124,7 @@ func getCountryRegiondata(c *gin.Context) {
 	}
 }
 
-func testsql() *sql.DB {
+func Connectmysql() *sql.DB {
 	db, err := sql.Open("mysql", "tester:secret@tcp(host.docker.internal:3306)/api")
 	if err != nil {
 		return nil
@@ -131,14 +132,11 @@ func testsql() *sql.DB {
 	return db
 }
 
-// func getCountryRegiondata() {
-
-// 	countrylist := models.GetCountryByReion()
-
-// 	// if countrylist == nil || len(countrylist) == 0 {
-// 	// 	c.AbortWithStatus(http.StatusNotFound)
-// 	// } else {
-// 	// 	c.IndentedJSON(http.StatusOK, countrylist)
-// 	// }
-// 	fmt.Println(len(countrylist))
+// func connectioncheck() {
+// 	err := Db.Ping()
+// 	if err != nil {
+// 		Db.Close()
+// 		Db = connectmysql()
+// 	}
+// 	log.Println(err)
 // }
