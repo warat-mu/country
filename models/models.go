@@ -17,15 +17,10 @@ type Data struct {
 	// Currencies_Symbol string
 }
 
-func GetCountry() []Data {
+var Db *sql.DB
 
-	db, err := sql.Open("mysql", "tester:secret@tcp(host.docker.internal:3306)/api")
-	if err != nil {
-		return nil
-	}
-	defer db.Close()
-
-	result, err := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata;")
+func GetCountry(db sql.DB) []Data {
+	result, _ := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata;")
 	defer result.Close()
 
 	var DataList []Data
@@ -40,13 +35,7 @@ func GetCountry() []Data {
 	return DataList
 }
 
-func GetCountryDESC() []Data {
-
-	db, err := sql.Open("mysql", "tester:secret@tcp(host.docker.internal:3306)/api")
-	if err != nil {
-		return nil
-	}
-	defer db.Close()
+func GetCountryDESC(db sql.DB) []Data {
 	result, _ := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata ORDER BY Population DESC;")
 	defer result.Close()
 
@@ -63,13 +52,8 @@ func GetCountryDESC() []Data {
 	return DataList
 }
 
-func GetCountryASC() []Data {
+func GetCountryASC(db sql.DB) []Data {
 
-	db, err := sql.Open("mysql", "tester:secret@tcp(host.docker.internal:3306)/api")
-	if err != nil {
-		return nil
-	}
-	defer db.Close()
 	result, _ := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata ORDER BY Population ASC;")
 	defer result.Close()
 
@@ -86,13 +70,7 @@ func GetCountryASC() []Data {
 	return DataList
 }
 
-func GetCountryByReion(region string) []Data {
-
-	db, err := sql.Open("mysql", "tester:secret@tcp(host.docker.internal:3306)/api")
-	if err != nil {
-		return nil
-	}
-	defer db.Close()
+func GetCountryByReion(region string, db sql.DB) []Data {
 
 	result, _ := db.Query("SELECT Name,Region,Population,Flag_png,Currencies_Name FROM countrydata WHERE Region = ?;", region)
 	defer result.Close()

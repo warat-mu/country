@@ -32,13 +32,7 @@ type Flags struct {
 	Png string `json:"png"`
 }
 
-func DBcheck() {
-	db, err := sql.Open("mysql", "tester:secret@tcp(host.docker.internal:3306)/api")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-
+func DBcheck(db *sql.DB) {
 	var check int
 	result := db.QueryRow("SELECT EXISTS (SELECT 1 FROM api.countrydata);")
 	errs := result.Scan(&check)
@@ -47,12 +41,12 @@ func DBcheck() {
 	}
 	fmt.Println(check)
 	if check == 0 {
-		NewCountry()
+		NewCountry(db)
 	}
 
 }
 
-func NewCountry() {
+func NewCountry(db *sql.DB) {
 
 	resp, err := http.Get("https://restcountries.com/v2/all")
 	if err != nil {
@@ -69,12 +63,6 @@ func NewCountry() {
 	if err := json.Unmarshal(body, &result); err != nil {
 		fmt.Println(err.Error())
 	}
-
-	db, err := sql.Open("mysql", "tester:secret@tcp(host.docker.internal:3306)/api")
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
 
 	for _, rec := range result {
 		insert, err := db.Query("INSERT INTO api.countrydata (Name,Region,Population,Flag_png,Flag_svg,Currencies_Code,Currencies_Name,Currencies_Symbol) VALUES (?,?,?,?,?,?,?,?)", rec.Name, countryRegion(rec.Region, rec.Subregion), rec.Population, rec.Flags.Png, rec.Flags.Svg, getcurrenciesCode(rec.Currencies), getcurrenciesName(rec.Currencies), getcurrenciesSymbol(rec.Currencies))
