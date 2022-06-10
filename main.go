@@ -6,38 +6,37 @@ import (
 	"country/env"
 	"country/models"
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 )
 
-var ctx context.Context
-var Cache *redis.Client
-var Db *sql.DB
-
 func main() {
+  dep := env.New(
+    Connectmysql(),
+    context.Background(),
+    env.Redisinit(),
+    )
+	addDB.DBcheck(dep.Db)
+	// pong, err := Cache.Ping(ctx).Result()
+	// if err != nil {
+	// 	log.Println("ERROR")
+	// 	log.Println(err)
 
-	Db = Connectmysql()
-	ctx := context.Background()
-	Cache = env.Redisinit()
-	addDB.DBcheck(Db)
-	pong, err := Cache.Ping(ctx).Result()
-	if err != nil {
-		log.Println("ERROR")
-		log.Println(err)
-
-	}
-	log.Println(pong)
+	// }
+	// log.Println(pong)
 	router := gin.Default()
 	router.Use(cors.Default())
-	router.Use(env.VerifyCache(ctx, Cache))
-	router.GET("/", getCountrydata)
-	router.GET("/desc", getCountrydataDesc)
-	router.GET("/asc", getCountrydataAsc)
-	router.GET("/:region", getCountryRegiondata)
+
+	router.Use(env.VerifyCache(dep))
+	router.GET("/", getCountrydata(dep))
+	router.GET("/desc", getCountrydataDesc(dep))
+	router.GET("/asc", getCountrydataAsc(dep))
+	router.GET("/:region", getCountryRegiondata(dep))
 	router.Run()
 
 	// fmt.Println(models.GetCountry())
@@ -53,64 +52,73 @@ func mysqlcon() *sql.DB {
 	return db
 }
 
-func setCache(c *gin.Context, cl []models.Data) {
-	// path := c.Request.URL.Path
-	// data, err := json.Marshal(cl)
-	// if err != nil {
-	// 	log.Println(err)
-	// }
-	// log.Println(data)
-	// Cache = env.Redisinit()
-	// cacheErr := Cache.Set(ctx, path, data, 100*time.Second)
-	// if cacheErr != nil {
-	// 	panic(cacheErr)
-	// }
+func setCache(c *gin.Context, cl []*models.Data, dep *env.Dep) {
+  path := c.Request.URL.Path
+  data, err := json.Marshal(cl)
+  if err != nil {
+    log.Println(err)
+  }
+  log.Println(data)
+  cacheErr := dep.Cache.Set(dep.Ctx, path, data, 100*time.Second)
+  if cacheErr != nil {
+    panic(cacheErr)
+  }
 }
 
-func getCountrydata(c *gin.Context) {
-	countrylist := models.GetCountry(Db)
-	// log.Println(countrylist)
 
-	if countrylist == nil || len(countrylist) == 0 {
-		c.AbortWithStatus(http.StatusNotFound)
-	} else {
-		// setCache(c, countrylist)
-		c.IndentedJSON(http.StatusOK, countrylist)
-	}
+func getCountrydata(dep *env.Dep) gin.HandlerFunc {
+  return func(c *gin.Context) {
+      countrylist := models.GetCountry(dep.Db)
+      // log.Println(countrylist)
+
+      if countrylist == nil || len(countrylist) == 0 {
+        c.AbortWithStatus(http.StatusNotFound)
+      } else {
+setCache(c, countrylist, dep)
+        c.IndentedJSON(http.StatusOK, countrylist)
+      }
+  }
 }
 
-func getCountrydataDesc(c *gin.Context) {
-	countrylist := models.GetCountryDESC(Db)
+func getCountrydataDesc(dep *env.Dep) gin.HandlerFunc {
+  return func (c *gin.Context) {
+    countrylist := models.GetCountryDESC(dep.Db)
 
-	if countrylist == nil || len(countrylist) == 0 {
-		c.AbortWithStatus(http.StatusNotFound)
-	} else {
-		// setCache(c, countrylist)
-		c.IndentedJSON(http.StatusOK, countrylist)
-	}
+    if countrylist == nil || len(countrylist) == 0 {
+      c.AbortWithStatus(http.StatusNotFound)
+    } else {
+      setCache(c, countrylist, dep)
+      c.IndentedJSON(http.StatusOK, countrylist)
+    }
+  }
 }
 
-func getCountrydataAsc(c *gin.Context) {
-	countrylist := models.GetCountryASC(Db)
+func getCountrydataAsc(dep *env.Dep) gin.HandlerFunc {
+  return func(c *gin.Context) {
+    countrylist := models.GetCountryASC(dep.Db)
 
-	if countrylist == nil || len(countrylist) == 0 {
-		c.AbortWithStatus(http.StatusNotFound)
-	} else {
-		// setCache(c, countrylist)
-		c.IndentedJSON(http.StatusOK, countrylist)
-	}
+    if countrylist == nil || len(countrylist) == 0 {
+      c.AbortWithStatus(http.StatusNotFound)
+    } else {
+setCache(c, countrylist, dep)
+      c.IndentedJSON(http.StatusOK, countrylist)
+    }
+  }
 }
 
-func getCountryRegiondata(c *gin.Context) {
-	region := c.Param("region")
-	countrylist := models.GetCountryByReion(region, Db)
+func getCountryRegiondata(dep *env.Dep) gin.HandlerFunc {
+  return func(c *gin.Context) {
+    region := c.Param("region")
+    countrylist := models.GetCountryByReion(region, dep.Db)
 
-	if countrylist == nil || len(countrylist) == 0 {
-		c.AbortWithStatus(http.StatusNotFound)
-	} else {
-		// setCache(c, countrylist)
-		c.IndentedJSON(http.StatusOK, countrylist)
-	}
+    if countrylist == nil || len(countrylist) == 0 {
+      c.AbortWithStatus(http.StatusNotFound)
+    } else {
+setCache(c, countrylist, dep)
+      c.IndentedJSON(http.StatusOK, countrylist)
+    }
+  }
+
 }
 
 func Connectmysql() *sql.DB {
