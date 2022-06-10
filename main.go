@@ -30,7 +30,6 @@ func main() {
 		log.Println(err)
 
 	}
-	log.Println("OK======================")
 	log.Println(pong)
 	router := gin.Default()
 	router.Use(cors.Default())

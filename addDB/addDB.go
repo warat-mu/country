@@ -3,8 +3,8 @@ package addDB
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -39,35 +39,37 @@ func DBcheck(db *sql.DB) {
 	if errs != nil {
 		panic(errs.Error())
 	}
-	fmt.Println(check)
 	if check == 0 {
+		log.Println("Donn't have data")
+		log.Println("Insert data")
 		NewCountry(db)
+	} else {
+		log.Println("Have data")
 	}
-
 }
 
 func NewCountry(db *sql.DB) {
 
 	resp, err := http.Get("https://restcountries.com/v2/all")
 	if err != nil {
-		fmt.Println("No response from request")
+		log.Println("No response from request")
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 	var result []Country
 	if err := json.Unmarshal(body, &result); err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 	for _, rec := range result {
 		insert, err := db.Query("INSERT INTO api.countrydata (Name,Region,Population,Flag_png,Flag_svg,Currencies_Code,Currencies_Name,Currencies_Symbol) VALUES (?,?,?,?,?,?,?,?)", rec.Name, countryRegion(rec.Region, rec.Subregion), rec.Population, rec.Flags.Png, rec.Flags.Svg, getcurrenciesCode(rec.Currencies), getcurrenciesName(rec.Currencies), getcurrenciesSymbol(rec.Currencies))
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 		}
 		insert.Close()
 	}
